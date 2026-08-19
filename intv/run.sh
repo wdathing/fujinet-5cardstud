@@ -3,7 +3,7 @@
 # jzIntv, connected to a real fujinet-firmware instance over BoIP.
 #
 # Override any of these on the command line, e.g.:
-#   JZINTV=/path/to/jzintv FUJINET_TARGET=localhost:1985 ./run.sh
+#   JZINTV=/path/to/jzintv FUJINET_TARGET=localhost:9995 ./run.sh
 #   ./run.sh --fujinet-debug        # extra flags are passed straight to jzintv
 
 set -e
@@ -14,7 +14,7 @@ JZINTV_DIR=${JZINTV_DIR:-$HOME/Workspace/jzintv-20200712-src}
 JZINTV=${JZINTV:-$JZINTV_DIR/bin/jzintv}
 EXEC_BIN=${EXEC_BIN:-$JZINTV_DIR/rom/exec.bin}
 GROM_BIN=${GROM_BIN:-$JZINTV_DIR/rom/grom.bin}
-FUJINET_TARGET=${FUJINET_TARGET:-localhost:1985}
+FUJINET_TARGET=${FUJINET_TARGET:-localhost:9995}
 
 if [ ! -x "$JZINTV" ]; then
     echo "jzIntv not found or not executable at: $JZINTV" >&2
@@ -37,7 +37,7 @@ fi
 
 echo "Launching jzIntv against FujiNet at $FUJINET_TARGET ..."
 exec "$JZINTV" \
-    -z 3 \
+    -z 4 \
     -e "$EXEC_BIN" \
     -g "$GROM_BIN" \
     --fujinet="$FUJINET_TARGET" \

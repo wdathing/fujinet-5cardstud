@@ -5,36 +5,36 @@
 ' proven working by intv/fujitest.bas in that repo. Do not change these
 ' addresses without re-checking that file.
 '
-' MEMATTR intentionally stops at $97FF, short of the $9800-$9FFF mailbox
+' MEMATTR intentionally stops at $9BFF, short of the $9C00-$9FFF mailbox
 ' itself: on real PiRTO II hardware the RP2040 maps that whole window as
 ' RAM unconditionally (inty_cart.c hardcodes it, independent of what this
 ' .cfg says), so declaring less here doesn't affect real hardware or what
 ' POKE can reach at runtime. But jzIntv's --fujinet peripheral emulation
-' registers its own handler for $9800-$9FFF *after* the cart's generic
+' registers its own handler for $9C00-$9FFF *after* the cart's generic
 ' MEMATTR RAM, and its layered bus dispatch lets whichever peripheral
 ' registered first answer a given address -- so declaring the full
 ' $8000-$9FFF range here (as fujitest.bas does) silently shadows the
 ' emulator's FujiNet peripheral with inert RAM, and the mailbox never
 ' comes up under --fujinet even though it works on real hardware.
-    ASM MEMATTR $8000, $97FF, "+RWN"
+    ASM MEMATTR $8000, $9BFF, "+RWN"
 
-    CONST FN_MAGIC0     = $9800
-    CONST FN_MAGIC1     = $9801
-    CONST FN_SEQ        = $9803
-    CONST FN_ACKSEQ     = $9804
-    CONST FN_DEVICE     = $9805
-    CONST FN_CMD        = $9806
-    CONST FN_NPARAM     = $9807
-    CONST FN_TXLEN_LO   = $9808
-    CONST FN_TXLEN_HI   = $9809
-    CONST FN_ERR        = $980B
-    CONST FN_RXLEN_LO   = $980C
-    CONST FN_RXLEN_HI   = $980D
-    CONST FN_REPLY_CMD  = $980E
-    CONST FN_PARAM_SIZE = $9810
-    CONST FN_PARAM_VAL  = $9820
-    CONST FN_TX         = $9840
-    CONST FN_RX         = $9940
+    CONST FN_MAGIC0     = $9C00
+    CONST FN_MAGIC1     = $9C01
+    CONST FN_SEQ        = $9C03
+    CONST FN_ACKSEQ     = $9C04
+    CONST FN_DEVICE     = $9C05
+    CONST FN_CMD        = $9C06
+    CONST FN_NPARAM     = $9C07
+    CONST FN_TXLEN_LO   = $9C08
+    CONST FN_TXLEN_HI   = $9C09
+    CONST FN_ERR        = $9C0B
+    CONST FN_RXLEN_LO   = $9C0C
+    CONST FN_RXLEN_HI   = $9C0D
+    CONST FN_REPLY_CMD  = $9C0E
+    CONST FN_PARAM_SIZE = $9C10
+    CONST FN_PARAM_VAL  = $9C20
+    CONST FN_TX         = $9C40
+    CONST FN_RX         = $9D40
 
     CONST FUJICMD_ACK = $06
     CONST FUJICMD_NAK = $15

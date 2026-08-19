@@ -15,7 +15,7 @@ AS1600     ?= as1600
 LIBDIR     ?= $(HOME)/Workspace/IntyBASIC/intybasic/
 
 PRODUCT = 5card
-SOURCES = 5card.bas constants.bas fujinet.bas gfx.bas state.bas
+SOURCES = 5card.bas constants.bas input.bas fujinet.bas gfx.bas state.bas
 
 .PHONY: all clean run
 

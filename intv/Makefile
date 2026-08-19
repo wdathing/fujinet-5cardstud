@@ -15,7 +15,9 @@ AS1600     ?= as1600
 LIBDIR     ?= $(HOME)/Workspace/IntyBASIC/intybasic/
 
 PRODUCT = 5card
-SOURCES = 5card.bas constants.bas input.bas fujinet.bas gfx.bas state.bas
+# Every .bas that participates in the build, listed explicitly -- sound.bas
+# was missing here, so editing it alone never triggered a rebuild.
+SOURCES = 5card.bas constants.bas input.bas fujinet.bas gfx.bas state.bas sound.bas
 
 .PHONY: all clean run
 

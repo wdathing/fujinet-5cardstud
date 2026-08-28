@@ -658,14 +658,23 @@ render_game: PROCEDURE
     IF (tmp_pc <> prev_playercount) OR (round < prev_round) OR force_redraw THEN
         CLS
         GOSUB fill_bg
-        ' Center block, rows 5-6: pot ("$" + value) and your own purse ("P"
+        ' Center block, rows 5-6: pot ("P" + value) and your own purse ("$"
         ' + value) stacked directly beneath it. Both stay within cols 8-12
         ' -- the one column range no seat's card art ever reaches at any
         ' player count (the nearest cards, seat 2/6's, start at col 0/14).
-        PRINT AT 108 COLOR COL_NAME, "$"
-        PRINT AT 128 COLOR COL_NAME, "P"
+        ' "$" marks money you own, matching the per-seat purses show_purses
+        ' draws; the pot isn't anyone's yet, so it gets a plain "P".
+        PRINT AT 108 COLOR COL_NAME, "P"
+        PRINT AT 128 COLOR COL_NAME, "$"
         #prev_pot = 65535   ' force the pot to redraw too on a full layout reset
         #prev_purse = 65535 ' likewise for purse
+        ' The CLS above wiped every seat's bet digits, so the cached values
+        ' the seat loop compares against are now stale in the one direction
+        ' that matters: equal means "skip the PRINT", which would leave the
+        ' bets blank until a seat's bet happened to change on its own.
+        FOR gs_i = 0 TO 7
+            prev_bet(gs_i) = 255
+        NEXT gs_i
         force_redraw = 0
         ' A new hand means every seat's hand is starting over -- without
         ' this, a seat that had (say) 3 cards last hand would treat this
@@ -791,14 +800,28 @@ END
 
 ' ---------------------------------------------------------------------------
 ' show_purses: while KEYPAD ENTER is held, overwrite every seated player's
-' name cells with their purse value instead. Reuses tmp_pc/seatmap/
-' seat_name_off exactly as render_game's own seat loop does -- tmp_pc is a
-' global left holding the last poll's player count, so this works between
-' polls without needing a fresh network round-trip. Releasing the key just
-' asks for a full redraw on the next poll (the same trick the win-message
-' overlay uses) rather than restoring each name field by hand here.
+' name AND bet cells with "$" + their purse value instead. Reuses tmp_pc/
+' seatmap/seat_name_off exactly as render_game's own seat loop does -- tmp_pc
+' is a global left holding the last poll's player count, so this works between
+' polls without needing a fresh network round-trip.
+'
+' Taking the bet field too (rather than just the 4 name cells) is the whole
+' point: a purse left sitting immediately left of a bet, with no separator
+' between them, reads as one run-together number -- 1250 next to a bet of 05
+' looks like "125005". Covering all 6 cells leaves nothing to misread.
+'
+' On release we repaint name + bet ourselves from the same FN_RX snapshot the
+' purses came from -- nothing polled while the key was held, so that snapshot
+' is still exactly what render_game last drew. Doing it here rather than via
+' force_redraw restores instantly instead of a poll away (~1/3s plus a network
+' round-trip), and skips the full-screen CLS that flashes the whole table.
 ' ---------------------------------------------------------------------------
 show_purses: PROCEDURE
+    ' tmp_pc is still 0 if ENTER lands before the first render ever completes;
+    ' the loops below would then count 0 TO -1, which wraps to 0 TO 255 on an
+    ' 8-bit variable and walks off the end of seatmap.
+    IF tmp_pc = 0 THEN RETURN
+
     gs_j = tmp_pc - 2
     IF gs_j < 0 THEN gs_j = 0
     IF gs_j > 6 THEN gs_j = 6
@@ -810,7 +833,14 @@ show_purses: PROCEDURE
             #tmp_addr = player_addr(gs_i)
             #tmp_num = u16be(#tmp_addr + PL_PURSE)
             IF #tmp_num > 9999 THEN #tmp_num = 9999
-            PRINT AT sel_i COLOR COL_HILITE, <.4>#tmp_num
+            ' 6 cells: "$" pinned at the seat's first column, 4 right-aligned
+            ' digits over the rest of the name field plus the first bet cell,
+            ' and the second bet cell blanked back to felt. No seat's 6-cell
+            ' span crosses a row boundary (the rightmost, seats 5-7 at col 14,
+            ' ends exactly at col 19), so this never wraps onto card art.
+            PRINT AT sel_i COLOR COL_HILITE, "$"
+            PRINT AT sel_i + 1 COLOR COL_HILITE, <.4>#tmp_num
+            #BACKTAB(sel_i + 5) = COL_NAME
         END IF
     NEXT gs_i
 
@@ -819,7 +849,28 @@ sp_wait:
     GOSUB read_input
     IF inp_key = 11 THEN GOTO sp_wait ' level, not an edge -- this is hold-to-view
 
-    force_redraw = 1 ' restore names (and everything else) on the next poll
+    ' Released -- put the names and bets back, same as render_game draws them.
+    FOR gs_i = 0 TO tmp_pc - 1
+        sel_seat = PEEK(VARPTR seatmap(0) + gs_j * 8 + gs_i) AND 255
+        IF sel_seat <> 255 THEN
+            sel_i = PEEK(VARPTR seat_name_off(0) + sel_seat) AND 255
+
+            #gs_c = COL_NAME
+            IF gs_i = active_player THEN #gs_c = COL_HILITE
+
+            #tmp_addr = player_addr(gs_i)
+            #df_src = #tmp_addr + PL_NAME : df_pos = sel_i : df_len = 4 : #df_color = #gs_c
+            GOSUB draw_field
+
+            #tmp_num = u16be(#tmp_addr + PL_BET)
+            IF #tmp_num > 255 THEN #tmp_num = 255 ' clamp: prev_bet is an 8-bit array
+            PRINT AT sel_i + 4 COLOR #gs_c, <2>#tmp_num
+            ' Keep render_game's change-detection cache agreeing with what is
+            ' actually on screen, so the next poll doesn't redraw it needlessly
+            ' (or, worse, skip a genuine change).
+            prev_bet(sel_seat) = #tmp_num
+        END IF
+    NEXT gs_i
 END
 
 ' ---------------------------------------------------------------------------

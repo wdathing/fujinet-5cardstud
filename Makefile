@@ -37,6 +37,9 @@ PLATFORM_COMBOS = \
 CFLAGS_EXTRA_MSDOS = -q -otexan
 
 CFLAGS_EXTRA_MSXROM = -DBUILD_MSX
+# Do not add -lmsxbios here: it displaces routines --generic-console relies on
+# and the SCREEN 2 display comes up garbled. src/msx/joyread.asm calls the two
+# BIOS entries it needs directly instead.
 LDFLAGS_EXTRA_MSXROM += --generic-console -pragma-redirect:CRT_FONT=_font -create-app -lm
 
 LDFLAGS_EXTRA_APPLE2 = -C src/apple2/apple2-hgr.cfg

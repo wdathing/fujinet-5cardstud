@@ -18,24 +18,29 @@
  * Platform specific key map for common input
  */
 
+// Primary codes are what the MSX BIOS CHGET actually returns for the cursor
+// keys. The _2 slots are unused placeholders (readCommonInput() switches on all
+// three, so they only have to be distinct and unreachable) - same approach as
+// src/coco/vars.h. The _3 slots are the , . - = alternates.
+
 #define KEY_LEFT_ARROW      0x1D
-#define KEY_LEFT_ARROW_2    0x9D
+#define KEY_LEFT_ARROW_2    0xF1
 #define KEY_LEFT_ARROW_3    0x2C // ,
 
 #define KEY_RIGHT_ARROW     0x1C
-#define KEY_RIGHT_ARROW_2   0x1D
+#define KEY_RIGHT_ARROW_2   0xF2
 #define KEY_RIGHT_ARROW_3   0x2E // .
 
 #define KEY_UP_ARROW        0x1E
-#define KEY_UP_ARROW_2      0x91
+#define KEY_UP_ARROW_2      0xF3
 #define KEY_UP_ARROW_3      0x2D // -
 
 #define KEY_DOWN_ARROW      0x1F
-#define KEY_DOWN_ARROW_2    0x11
+#define KEY_DOWN_ARROW_2    0xF4
 #define KEY_DOWN_ARROW_3    0x3D // =
 
-#define KEY_RETURN       0x0a
-#define KEY_ESCAPE       0x1b
+#define KEY_RETURN       0x0D
+#define KEY_ESCAPE       0x1B
 #define KEY_ESCAPE_ALT   0x03
 #define KEY_SPACE        0x20
 #define KEY_BACKSPACE    0x08

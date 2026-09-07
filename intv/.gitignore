@@ -1,0 +1,6 @@
+# Build outputs from `make` in this directory (see Makefile).
+5card.asm
+5card.bin
+5card.cfg
+5card.rom
+5card.lst
